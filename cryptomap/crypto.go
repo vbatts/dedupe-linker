@@ -1,4 +1,4 @@
-package main
+package cryptomap
 
 import (
 	"crypto"
@@ -9,6 +9,10 @@ import (
 	"log"
 	"strings"
 )
+
+var knownCiphers = map[string]crypto.Hash{
+	"md5": crypto.MD5,
+}
 
 func DetermineHash(str string) (h crypto.Hash) {
 	switch strings.ToLower(str) {

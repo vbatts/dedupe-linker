@@ -9,6 +9,7 @@ import (
 	"runtime"
 
 	"./base"
+	"./cryptomap"
 	"./file"
 )
 
@@ -27,13 +28,15 @@ func init() {
 
 func main() {
 	flag.Parse()
-	if err := base.InitVarBase(*flVarBase); err != nil {
+
+	// TODO the *flCipher has not been checked yet, and would cause the directory to get created
+	ourbase, err := base.NewBase(*flVarBase, *flCipher)
+	if err != nil {
 		log.Fatal(err)
 	}
 
 	var (
-		hash    = DetermineHash(*flCipher)
-		ourbase = base.Base{Path: *flVarBase}
+		hash = cryptomap.DetermineHash(*flCipher)
 		//infos = []*file.FileHashInfo{}
 		//mu    = sync.Mutex{}
 		//results := make(chan file.FileHashInfo, 2)
@@ -55,7 +58,7 @@ func main() {
 				done <- struct{}{}
 			}
 			fmt.Printf("%s  %s\n", fi.Hash, fi.Path)
-			if ourbase.HasBlob(fi.HashType, fi.Hash) {
+			if ourbase.HasBlob(fi.Hash) {
 				// TODO check if they have the same Inode
 				// if not, then clobber
 			} else {
