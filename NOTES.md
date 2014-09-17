@@ -1,4 +1,4 @@
 
 ## things to watch for
-* ownership and info on shared inodes
+* shared inodes share all attributes too
 

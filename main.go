@@ -38,9 +38,7 @@ func main() {
 	var (
 		hash = cryptomap.DetermineHash(*flCipher)
 		//infos = []*file.FileHashInfo{}
-		//mu    = sync.Mutex{}
 		//results := make(chan file.FileHashInfo, 2)
-		//wg := sync.WaitGroup{}
 	)
 
 	for _, arg := range flag.Args() {

@@ -7,17 +7,25 @@ import (
 )
 
 func NewBase(path string, hashName string) (*Base, error) {
-	for _, p := range []string{"dedup/blobs" + hashName, "dedup/state"} {
-		if err := os.MkdirAll(filepath.Join(path, p), 0755); err != nil {
+	root := filepath.Join(path, "dedup")
+	for _, p := range []string{"blobs/" + hashName, "state"} {
+		if err := os.MkdirAll(filepath.Join(root, p), 0755); err != nil {
 			return nil, err
 		}
 	}
-	return &Base{Path: path, HashName: hashName}, nil
+	return &Base{Path: root, HashName: hashName}, nil
 }
 
 type Base struct {
 	Path     string
 	HashName string
+}
+
+func (b Base) blobPath(sum string) string {
+	if len(sum) < 3 {
+		return ""
+	}
+	return filepath.Join(b.Path, "blobs", b.HashName, sum[0:2], sum)
 }
 
 // GetBlob store the content from src, for the sum and hashType
