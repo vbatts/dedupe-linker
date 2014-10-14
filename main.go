@@ -17,6 +17,7 @@ var (
 	flVarBase = flag.String("b", filepath.Join(os.Getenv("HOME"), "var"), "base directory where files are duplicated")
 	flCipher  = flag.String("c", "sha1", "block cipher to use (sha1, or sha256)")
 	flWorkers = flag.Int("w", 2, "workers to do summing")
+	flNoop    = flag.Bool("noop", false, "don't do any moving or linking")
 )
 
 func init() {
@@ -55,12 +56,18 @@ func main() {
 				log.Println(fi.Err)
 				done <- struct{}{}
 			}
-			fmt.Printf("%s  %s\n", fi.Hash, fi.Path)
-			if ourbase.HasBlob(fi.Hash) {
-				// TODO check if they have the same Inode
-				// if not, then clobber
+			if *flNoop {
+				fmt.Printf("%s  [%d]  %s\n", fi.Hash, fi.Size, fi.Path)
 			} else {
-				// TODO hard link to blobs
+				if ourbase.HasBlob(fi.Hash) && !ourbase.SameFile(fi.Hash, fi.Path) {
+					if err := ourbase.LinkTo(fi.Path, fi.Hash); err != nil {
+						log.Println("ERROR-1", err)
+					}
+				} else {
+					if err := ourbase.LinkFrom(fi.Path, fi.Hash); err != nil {
+						log.Println("ERROR-2", err)
+					}
+				}
 			}
 		}
 	}

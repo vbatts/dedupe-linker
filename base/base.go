@@ -1,15 +1,21 @@
 package base
 
 import (
+	"crypto"
+	"fmt"
 	"io"
+	"io/ioutil"
+	"log"
 	"os"
 	"path/filepath"
+
+	"../file"
 )
 
 func NewBase(path string, hashName string) (*Base, error) {
 	root := filepath.Join(path, "dedup")
-	for _, p := range []string{"blobs/" + hashName, "state"} {
-		if err := os.MkdirAll(filepath.Join(root, p), 0755); err != nil {
+	for _, p := range []string{"blobs/" + hashName, "state", "tmp"} {
+		if err := os.MkdirAll(filepath.Join(root, p), 0755); err != nil && !os.IsExist(err) {
 			return nil, err
 		}
 	}
@@ -19,6 +25,11 @@ func NewBase(path string, hashName string) (*Base, error) {
 type Base struct {
 	Path     string
 	HashName string
+	Hash     crypto.Hash
+}
+
+func (b Base) Stat(sum string) (os.FileInfo, error) {
+	return os.Stat(b.blobPath(sum))
 }
 
 func (b Base) blobPath(sum string) string {
@@ -28,22 +39,111 @@ func (b Base) blobPath(sum string) string {
 	return filepath.Join(b.Path, "blobs", b.HashName, sum[0:2], sum)
 }
 
+type ReaderSeekerCloser interface {
+	io.Reader
+	io.Seeker
+	io.Closer
+}
+
+func (b Base) SameFile(sum, path string) bool {
+	var (
+		bInode, dInode uint64
+		err            error
+	)
+	if bInode, err = file.GetInode(b.blobPath(sum)); err != nil {
+		return false
+	}
+	if dInode, err = file.GetInode(path); err != nil {
+		return false
+	}
+	if bInode == dInode {
+		return true
+	}
+	return false
+
+}
+
 // GetBlob store the content from src, for the sum and hashType
-func (b Base) GetBlob(sum string) (io.Reader, error) {
-	// XXX
-	return nil, nil
+func (b Base) GetBlob(sum string) (ReaderSeekerCloser, error) {
+	return os.Open(b.blobPath(sum))
 }
 
 // PutBlob store the content from src, for the sum and hashType
 //
 // we take the sum up front to avoid recalculation and tempfiles
-func (b Base) PutBlob(sum string, src io.Reader) error {
-	// XXX
+func (b Base) PutBlob(src io.Reader, mode os.FileMode) (string, error) {
+	fh, err := b.tmpFile()
+	if err != nil {
+		return "", err
+	}
+	defer func() {
+		fh.Close()
+		os.Remove(fh.Name())
+	}()
+
+	h := b.Hash.New()
+	t := io.TeeReader(src, h)
+
+	if _, err = io.Copy(fh, t); err != nil {
+		return "", err
+	}
+
+	sum := fmt.Sprintf("%x", h.Sum(nil))
+	fi, err := b.Stat(sum)
+	if err == nil && fi.Mode().IsRegular() {
+		return sum, nil
+	}
+
+	if err := os.MkdirAll(filepath.Dir(b.blobPath(sum)), 0755); err != nil && !os.IsExist(err) {
+		return sum, err
+	}
+	destFh, err := os.Create(b.blobPath(sum))
+	if err != nil {
+		return sum, err
+	}
+	defer destFh.Close()
+	_, err = fh.Seek(0, 0)
+	if err != nil {
+		return sum, err
+	}
+	if _, err = io.Copy(destFh, fh); err != nil {
+		return sum, err
+	}
+	return sum, destFh.Chmod(mode)
+}
+
+func (b Base) tmpFile() (*os.File, error) {
+	return ioutil.TempFile(filepath.Join(b.Path, "tmp"), "put")
+}
+
+// Hard link the file from src to the blob for sum
+func (b Base) LinkFrom(src, sum string) error {
+	if err := os.MkdirAll(filepath.Dir(b.blobPath(sum)), 0756); err != nil && !os.IsExist(err) {
+		return err
+	}
+	return os.Link(src, b.blobPath(sum))
+}
+
+// Hard link the file for sum to the path at dest
+func (b Base) LinkTo(dest, sum string) error {
+	if err := os.MkdirAll(filepath.Dir(dest), 0755); err != nil && !os.IsExist(err) {
+		return err
+	}
+	err := os.Link(b.blobPath(sum), dest)
+	if err != nil && os.IsExist(err) {
+		if !b.SameFile(sum, dest) {
+			// XXX
+			log.Printf("Would clobber %q with %q", dest, b.blobPath(sum))
+		}
+	} else if err != nil {
+		return err
+	}
 	return nil
 }
 
 // HasBlob tests whether a blob with this sum exists
 func (b Base) HasBlob(sum string) bool {
-	// XXX
-	return true
+	fi, err := b.Stat(sum)
+	log.Println("SUCH FARTS", fi)
+	return fi != nil && err == nil
 }

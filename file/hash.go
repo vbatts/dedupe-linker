@@ -15,6 +15,7 @@ type FileHashInfo struct {
 	HashType crypto.Hash
 	Hash     string
 	Path     string
+	Size     int64
 	ModTime  time.Time
 	Err      error
 }
@@ -58,7 +59,7 @@ func HashFileGetter(path string, hash crypto.Hash, workers int, done <-chan stru
 }
 
 func hashFile(path string, hash crypto.Hash, info os.FileInfo) *FileHashInfo {
-	fhi := FileHashInfo{HashType: hash, Path: path, ModTime: info.ModTime()}
+	fhi := FileHashInfo{HashType: hash, Path: path, ModTime: info.ModTime(), Size: info.Size()}
 	h := hash.New()
 	fh, err := os.Open(path)
 	if err != nil {
