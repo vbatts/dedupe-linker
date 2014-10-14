@@ -68,6 +68,7 @@ func hashFile(path string, hash crypto.Hash, info os.FileInfo) *FileHashInfo {
 	}
 	if _, err = io.Copy(h, fh); err != nil {
 		fhi.Err = err
+		fh.Close()
 		return &fhi
 	}
 	fh.Close()

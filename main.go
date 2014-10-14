@@ -54,7 +54,7 @@ func main() {
 		for fi := range infos {
 			if fi.Err != nil {
 				log.Println(fi.Err)
-				done <- struct{}{}
+				//done <- struct{}{}
 			}
 			if *flNoop {
 				fmt.Printf("%s  [%d]  %s\n", fi.Hash, fi.Size, fi.Path)
