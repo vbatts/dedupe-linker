@@ -6,7 +6,6 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"sync"
 	"syscall"
 	"time"
 )
@@ -23,7 +22,6 @@ type FileHashInfo struct {
 func HashFileGetter(path string, hash crypto.Hash, workers int, done <-chan struct{}) <-chan FileHashInfo {
 	out := make(chan FileHashInfo, workers)
 	go func() {
-		var wg sync.WaitGroup
 		err := filepath.Walk(path, func(path string, info os.FileInfo, err error) error {
 			if err != nil {
 				return err
@@ -31,15 +29,8 @@ func HashFileGetter(path string, hash crypto.Hash, workers int, done <-chan stru
 			if !info.Mode().IsRegular() {
 				return nil
 			}
-			wg.Add(1)
-			go func() {
-				fhi := hashFile(path, hash, info)
-				select {
-				case out <- *fhi:
-				case <-done:
-				}
-				wg.Done()
-			}()
+			fhi := hashFile(path, hash, info)
+			out <- *fhi
 			select {
 			case <-done:
 				return fmt.Errorf("walk canceled")
@@ -50,10 +41,7 @@ func HashFileGetter(path string, hash crypto.Hash, workers int, done <-chan stru
 		if err != nil {
 			out <- FileHashInfo{Err: err}
 		}
-		go func() {
-			wg.Wait()
-			close(out)
-		}()
+		close(out)
 	}()
 	return out
 }
