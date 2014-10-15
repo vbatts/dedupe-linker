@@ -43,11 +43,13 @@ func main() {
 	)
 
 	for _, arg := range flag.Args() {
-		if m, err := file.SameDevPaths(*flVarBase, arg); err != nil {
-			log.Fatal(err)
-		} else if !m {
-			log.Printf("SKIPPING: %q is not on the same device as %q", arg, *flVarBase)
-			continue
+		if !*flNoop {
+			if m, err := file.SameDevPaths(*flVarBase, arg); err != nil {
+				log.Fatal(err)
+			} else if !m {
+				log.Printf("SKIPPING: %q is not on the same device as %q", arg, *flVarBase)
+				continue
+			}
 		}
 		done := make(chan struct{})
 		infos := file.HashFileGetter(arg, hash, *flWorkers, done)
