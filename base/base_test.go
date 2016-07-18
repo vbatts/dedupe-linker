@@ -63,4 +63,8 @@ func TestGetPut(t *testing.T) {
 	if err = b.LinkTo(path.Join(srcDir, "beef1.txt"), rHash); err != nil && !os.IsExist(err) {
 		t.Error(err)
 	}
+
+	if rHash != sum {
+		t.Errorf("expected %s; got %s", rHash, sum)
+	}
 }

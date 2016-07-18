@@ -9,7 +9,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"../file"
+	"github.com/vbatts/dedupe-linker/cryptomap"
+	"github.com/vbatts/dedupe-linker/file"
 )
 
 func NewBase(path string, hashName string) (*Base, error) {
@@ -19,7 +20,7 @@ func NewBase(path string, hashName string) (*Base, error) {
 			return nil, err
 		}
 	}
-	return &Base{Path: root, HashName: hashName}, nil
+	return &Base{Path: root, HashName: hashName, Hash: cryptomap.DetermineHash(hashName)}, nil
 }
 
 type Base struct {

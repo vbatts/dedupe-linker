@@ -1,7 +1,7 @@
 package walker
 
 import (
-	"./base"
+	"github.com/vbatts/dedupe-linker/base"
 )
 
 type Walker struct {

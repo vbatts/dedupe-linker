@@ -8,9 +8,9 @@ import (
 	"path/filepath"
 	"runtime"
 
-	"./base"
-	"./cryptomap"
-	"./file"
+	"github.com/vbatts/dedupe-linker/base"
+	"github.com/vbatts/dedupe-linker/cryptomap"
+	"github.com/vbatts/dedupe-linker/file"
 )
 
 var (
