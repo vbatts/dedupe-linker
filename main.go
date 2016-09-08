@@ -18,6 +18,7 @@ var (
 	flCipher  = flag.String("c", "sha1", "block cipher to use (sha1, or sha256)")
 	flWorkers = flag.Int("w", 2, "workers to do summing")
 	flNoop    = flag.Bool("noop", false, "don't do any moving or linking")
+	flDebug   = flag.Bool("debug", false, "enable debug output")
 )
 
 func init() {
@@ -29,6 +30,10 @@ func init() {
 
 func main() {
 	flag.Parse()
+
+	if *flDebug {
+		os.Setenv("DEBUG", "1")
+	}
 
 	// TODO the *flCipher has not been checked yet, and would cause the directory to get created
 	ourbase, err := base.NewBase(*flVarBase, *flCipher)
@@ -61,11 +66,14 @@ func main() {
 			if *flNoop {
 				fmt.Printf("%s  [%d]  %s\n", fi.Hash, fi.Size, fi.Path)
 			} else {
+				if os.Getenv("DEBUG") != "" {
+					fmt.Printf("%q: %q\n", fi.Path, ourbase.HasBlob(fi.Hash))
+				}
 				if ourbase.HasBlob(fi.Hash) && !ourbase.SameFile(fi.Hash, fi.Path) {
 					if err := ourbase.LinkTo(fi.Path, fi.Hash); err != nil {
 						log.Println("ERROR-1", err)
 					}
-				} else {
+				} else if !ourbase.HasBlob(fi.Hash) {
 					if err := ourbase.LinkFrom(fi.Path, fi.Hash); err != nil {
 						log.Println("ERROR-2", err)
 					}

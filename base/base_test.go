@@ -17,6 +17,20 @@ func TestSumPath(t *testing.T) {
 	}
 }
 
+func TestRand(t *testing.T) {
+	randmap := map[string]bool{}
+	for i := 0; i < 100; i++ {
+		r, err := randomString()
+		if err != nil {
+			t.Fatal(err)
+		}
+		if _, ok := randmap[r]; ok {
+			t.Errorf("expected no duplicates, but %q is a dup random string", r)
+		}
+		randmap[r] = true
+	}
+}
+
 func TestGetPut(t *testing.T) {
 	var (
 		srcDir, destDir string

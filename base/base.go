@@ -2,6 +2,7 @@ package base
 
 import (
 	"crypto"
+	"crypto/rand"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -125,6 +126,49 @@ func (b Base) LinkFrom(src, sum string) error {
 	return os.Link(src, b.blobPath(sum))
 }
 
+func randomString() (string, error) {
+	// make a random name
+	buf := make([]byte, 10)
+	if _, err := rand.Read(buf); err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("%x", buf), nil
+}
+
+// SafeLink overrides newname if it already exists. If there is an error in creating the link, the transaction is rolled back
+func SafeLink(oldname, newname string) error {
+	var backupName string
+	// check if newname exists
+	if fi, err := os.Stat(newname); err == nil && fi != nil {
+		// make a random name
+		buf := make([]byte, 5)
+		if _, err = rand.Read(buf); err != nil {
+			return err
+		}
+		backupName = fmt.Sprintf("%s.%x", newname, buf)
+		// move newname to the random name backupName
+		if err = os.Rename(newname, backupName); err != nil {
+			return err
+		}
+	}
+	// hardlink oldname to newname
+	if err := os.Link(oldname, newname); err != nil {
+		// if that failed, and there is a backupName
+		if len(backupName) > 0 {
+			// then move back the backup
+			if err = os.Rename(backupName, newname); err != nil {
+				return err
+			}
+		}
+		return err
+	}
+	// remove the backupName
+	if len(backupName) > 0 {
+		os.Remove(backupName)
+	}
+	return nil
+}
+
 // Hard link the file for sum to the path at dest
 func (b Base) LinkTo(dest, sum string) error {
 	if err := os.MkdirAll(filepath.Dir(dest), 0755); err != nil && !os.IsExist(err) {
@@ -133,8 +177,8 @@ func (b Base) LinkTo(dest, sum string) error {
 	err := os.Link(b.blobPath(sum), dest)
 	if err != nil && os.IsExist(err) {
 		if !b.SameFile(sum, dest) {
-			// XXX
-			log.Printf("Would clobber %q with %q", dest, b.blobPath(sum))
+			SafeLink(b.blobPath(sum), dest)
+			log.Printf("dedupped %q with %q", dest, b.blobPath(sum))
 		}
 	} else if err != nil {
 		return err
