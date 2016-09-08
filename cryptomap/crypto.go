@@ -29,7 +29,7 @@ func DetermineHash(str string) (h crypto.Hash) {
 	case "sha512":
 		h = crypto.SHA512
 	default:
-		log.Println("WARNING: unknown cipher %q. using 'sha1'", str)
+		log.Printf("WARNING: unknown cipher %q. using 'sha1'", str)
 		h = crypto.SHA1
 	}
 

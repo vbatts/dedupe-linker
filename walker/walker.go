@@ -9,10 +9,10 @@ type Walker struct {
 }
 
 func (w Walker) Walk(path string, quit chan int) error {
-
+	// XXX what is going on here?
 	select {
 	case <-quit:
-		return nil
+		close(quit)
 	}
 	return nil
 }

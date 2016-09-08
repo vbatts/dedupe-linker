@@ -145,6 +145,5 @@ func (b Base) LinkTo(dest, sum string) error {
 // HasBlob tests whether a blob with this sum exists
 func (b Base) HasBlob(sum string) bool {
 	fi, err := b.Stat(sum)
-	log.Println("SUCH FARTS", fi)
 	return fi != nil && err == nil
 }
