@@ -14,7 +14,9 @@ import (
 )
 
 var (
-	flVarBase = flag.String("b", filepath.Join(os.Getenv("HOME"), ".local/dedupe-linker/var"), "base directory where files are duplicated")
+	varBaseDir = filepath.Join(os.Getenv("HOME"), ".local/dedupe-linker/var")
+
+	flVarBase = flag.String("b", varBaseDir, "base directory where files are duplicated")
 	flCipher  = flag.String("c", "sha1", "block cipher to use (sha1, or sha256)")
 	flWorkers = flag.Int("w", 2, "workers to do summing")
 	flNoop    = flag.Bool("noop", false, "don't do any moving or linking")
@@ -26,6 +28,10 @@ func init() {
 	if runtime.NumCPU() > 1 && len(os.Getenv("GOMAXPROCS")) == 0 {
 		runtime.GOMAXPROCS(2)
 	}
+
+	if os.Getenv("VARBASEDIR") != "" {
+		varBaseDir = filepath.Clean(os.Getenv("VARBASEDIR"))
+	}
 }
 
 func main() {
@@ -33,6 +39,10 @@ func main() {
 
 	if *flDebug {
 		os.Setenv("DEBUG", "1")
+	}
+
+	if os.Getenv("DEBUG") != "" {
+		fmt.Fprintf(os.Stderr, "VARBASEDIR=%q\n", *flVarBase)
 	}
 
 	// TODO the *flCipher has not been checked yet, and would cause the directory to get created
