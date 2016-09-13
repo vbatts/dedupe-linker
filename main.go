@@ -14,7 +14,7 @@ import (
 )
 
 var (
-	varBaseDir = filepath.Join(os.Getenv("HOME"), ".local/dedupe-linker/var")
+	varBaseDir = filepath.Join(os.Getenv("HOME"), ".dedupe-linker/")
 
 	flVarBase = flag.String("b", varBaseDir, "base directory where files are duplicated")
 	flCipher  = flag.String("c", "sha1", "block cipher to use (sha1, or sha256)")
