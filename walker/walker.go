@@ -1,14 +1,15 @@
+// Package walker is a work-in-progress
 package walker
 
 import (
 	"github.com/vbatts/dedupe-linker/base"
 )
 
-type Walker struct {
+type walker struct {
 	Base *base.Base
 }
 
-func (w Walker) Walk(path string, quit chan int) error {
+func (w walker) Walk(path string, quit chan int) error {
 	// XXX what is going on here?
 	select {
 	case <-quit:
