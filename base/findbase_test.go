@@ -45,7 +45,8 @@ func TestSameDev(t *testing.T) {
 	}
 }
 
-func TestNotSameDev(t *testing.T) {
+// perhaps this is naive. Travis' /tmp is on the same device and not sure how to request it be tmpfs w/o needing sudo
+func testNotSameDev(t *testing.T) {
 	file1, err := ioutil.TempFile("/tmp", "test")
 	if err != nil {
 		t.Fatal(err)
