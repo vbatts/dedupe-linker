@@ -14,10 +14,10 @@ import (
 )
 
 var (
-	varBaseDir = filepath.Join(os.Getenv("HOME"), ".local/dedupe-linker/var")
+	varBaseDir = filepath.Join(os.Getenv("HOME"), ".dedupe-linker/")
 
 	flVarBase = flag.String("b", varBaseDir, "base directory where files are duplicated")
-	flCipher  = flag.String("c", "sha1", "block cipher to use (sha1, or sha256)")
+	flCipher  = flag.String("c", cryptomap.DefaultCipher, "block cipher to use (sha1, or sha256)")
 	flWorkers = flag.Int("w", 2, "workers to do summing")
 	flNoop    = flag.Bool("noop", false, "don't do any moving or linking")
 	flDebug   = flag.Bool("debug", false, "enable debug output")
@@ -53,8 +53,8 @@ func main() {
 
 	var (
 		hash = cryptomap.DetermineHash(*flCipher)
-		//infos = []*file.FileHashInfo{}
-		//results := make(chan file.FileHashInfo, 2)
+		//infos = []*file.HashInfo{}
+		//results := make(chan file.HashInfo, 2)
 	)
 
 	for _, arg := range flag.Args() {
@@ -77,7 +77,7 @@ func main() {
 				fmt.Printf("%s  [%d]  %s\n", fi.Hash, fi.Size, fi.Path)
 			} else {
 				if os.Getenv("DEBUG") != "" {
-					fmt.Printf("%q: %q\n", fi.Path, ourbase.HasBlob(fi.Hash))
+					fmt.Printf("%q: %t\n", fi.Path, ourbase.HasBlob(fi.Hash))
 				}
 				if ourbase.HasBlob(fi.Hash) && !ourbase.SameFile(fi.Hash, fi.Path) {
 					if err := ourbase.LinkTo(fi.Path, fi.Hash); err != nil {

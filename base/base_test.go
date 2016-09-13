@@ -2,7 +2,6 @@ package base
 
 import (
 	"bytes"
-	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
@@ -50,7 +49,7 @@ func TestGetPut(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	rHash := "deadbeaf"
+	rHash := "8f074e76e82ae6156c451019840a6f857bbe5157"
 	rMsg := "this is the dead beef"
 
 	r := bytes.NewReader([]byte(rMsg))
@@ -58,12 +57,18 @@ func TestGetPut(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
+	if sum != rHash {
+		t.Errorf("expected %q; got %q", rHash, sum)
+	}
 
 	fi, err := b.Stat(rHash)
 	if err != nil {
 		t.Error(err)
 	}
-	fmt.Printf("%#v\n", fi.Sys())
+	if fi == nil {
+		t.Fatal("did not find the blob " + rHash)
+	}
+	//fmt.Printf("%#v\n", fi.Sys())
 
 	if err = b.LinkTo(path.Join(srcDir, "beef1.txt"), rHash); err != nil {
 		t.Error(err)
@@ -72,7 +77,10 @@ func TestGetPut(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	fmt.Printf("%#v\n", fi2.Sys())
+	if fi2 == nil {
+		t.Fatal("did not find the linked file " + path.Join(srcDir, "beef1.txt"))
+	}
+	//fmt.Printf("%#v\n", fi2.Sys())
 
 	if err = b.LinkTo(path.Join(srcDir, "beef1.txt"), rHash); err != nil && !os.IsExist(err) {
 		t.Error(err)
