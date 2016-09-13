@@ -15,13 +15,12 @@ import (
 )
 
 func NewBase(path string, hashName string) (*Base, error) {
-	root := filepath.Join(path, "dedup")
 	for _, p := range []string{"blobs/" + hashName, "state", "tmp"} {
-		if err := os.MkdirAll(filepath.Join(root, p), 0755); err != nil && !os.IsExist(err) {
+		if err := os.MkdirAll(filepath.Join(path, p), 0755); err != nil && !os.IsExist(err) {
 			return nil, err
 		}
 	}
-	return &Base{Path: root, HashName: hashName, Hash: cryptomap.DetermineHash(hashName)}, nil
+	return &Base{Path: path, HashName: hashName, Hash: cryptomap.DetermineHash(hashName)}, nil
 }
 
 type Base struct {
