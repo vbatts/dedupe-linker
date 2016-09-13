@@ -51,7 +51,7 @@ func TestNotSameDev(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer file1.Close()
-	file2, err := ioutil.TempFile("/home/vbatts", "test")
+	file2, err := ioutil.TempFile(os.Getenv("HOME"), "test")
 	if err != nil {
 		t.Fatal(err)
 	}
