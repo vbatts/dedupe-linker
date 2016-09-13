@@ -14,6 +14,7 @@ import (
 	"github.com/vbatts/dedupe-linker/file"
 )
 
+// NewBase populates the directories needed in a dedupe-base directory
 func NewBase(path string, hashName string) (*Base, error) {
 	for _, p := range []string{"blobs/" + hashName, "state", "tmp"} {
 		if err := os.MkdirAll(filepath.Join(path, p), 0755); err != nil && !os.IsExist(err) {
@@ -23,12 +24,14 @@ func NewBase(path string, hashName string) (*Base, error) {
 	return &Base{Path: path, HashName: hashName, Hash: cryptomap.DetermineHash(hashName)}, nil
 }
 
+// Base is the destination for all hardlinks. Where stored objects are in a content addressible tree.
 type Base struct {
 	Path     string
 	HashName string
 	Hash     crypto.Hash
 }
 
+// Stat provides the os.FileInfo for the object of `sum` address
 func (b Base) Stat(sum string) (os.FileInfo, error) {
 	return os.Stat(b.blobPath(sum))
 }
@@ -40,12 +43,15 @@ func (b Base) blobPath(sum string) string {
 	return filepath.Join(b.Path, "blobs", b.HashName, sum[0:2], sum)
 }
 
-type ReaderSeekerCloser interface {
+// ReadSeekCloser is like an io.ReadCloser, but can Seek too
+type ReadSeekCloser interface {
 	io.Reader
 	io.Seeker
 	io.Closer
 }
 
+// SameFile checks whether the object of `sum` address, and `path` file path are the same file.
+// This checks by inode and device.
 func (b Base) SameFile(sum, path string) bool {
 	var (
 		bInode, dInode uint64
@@ -65,7 +71,7 @@ func (b Base) SameFile(sum, path string) bool {
 }
 
 // GetBlob store the content from src, for the sum and hashType
-func (b Base) GetBlob(sum string) (ReaderSeekerCloser, error) {
+func (b Base) GetBlob(sum string) (ReadSeekCloser, error) {
 	return os.Open(b.blobPath(sum))
 }
 
@@ -117,7 +123,8 @@ func (b Base) tmpFile() (*os.File, error) {
 	return ioutil.TempFile(filepath.Join(b.Path, "tmp"), "put")
 }
 
-// Hard link the file from src to the blob for sum
+// LinkFrom make a hard link the file from src to the blob of address `sum`.
+// TODO this function is going away, because it makes no assessment of the checksum of `src`
 func (b Base) LinkFrom(src, sum string) error {
 	if err := os.MkdirAll(filepath.Dir(b.blobPath(sum)), 0756); err != nil && !os.IsExist(err) {
 		return err
@@ -134,7 +141,8 @@ func randomString() (string, error) {
 	return fmt.Sprintf("%x", buf), nil
 }
 
-// SafeLink overrides newname if it already exists. If there is an error in creating the link, the transaction is rolled back
+// SafeLink overrides newname if it already exists. If there is an error in
+// creating the link, the transaction is rolled back
 func SafeLink(oldname, newname string) error {
 	var backupName string
 	// check if newname exists
@@ -168,7 +176,7 @@ func SafeLink(oldname, newname string) error {
 	return nil
 }
 
-// Hard link the file for sum to the path at dest
+// LinkTo makes a hard link the file of address `sum` to the path at `dest`
 func (b Base) LinkTo(dest, sum string) error {
 	if err := os.MkdirAll(filepath.Dir(dest), 0755); err != nil && !os.IsExist(err) {
 		return err

@@ -5,6 +5,8 @@ import (
 	"os"
 	"path/filepath"
 	"syscall"
+
+	"github.com/vbatts/dedupe-linker/file"
 )
 
 // FindBase steps up the directory tree to find the top-level that is still on
@@ -55,13 +57,5 @@ func hasPermission(path string) bool {
 func sameDevice(file1, file2 os.FileInfo) bool {
 	sys1 := file1.Sys().(*syscall.Stat_t)
 	sys2 := file2.Sys().(*syscall.Stat_t)
-	return ((major(sys1.Dev) == major(sys2.Dev)) && (minor(sys1.Dev) == minor(sys2.Dev)))
-}
-
-func major(n uint64) uint64 {
-	return uint64(n / 256)
-}
-
-func minor(n uint64) uint64 {
-	return uint64(n % 256)
+	return ((file.MajorDev(sys1.Dev) == file.MajorDev(sys2.Dev)) && (file.MinorDev(sys1.Dev) == file.MinorDev(sys2.Dev)))
 }
