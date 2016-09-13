@@ -77,7 +77,7 @@ func main() {
 				fmt.Printf("%s  [%d]  %s\n", fi.Hash, fi.Size, fi.Path)
 			} else {
 				if os.Getenv("DEBUG") != "" {
-					fmt.Printf("%q: %q\n", fi.Path, ourbase.HasBlob(fi.Hash))
+					fmt.Printf("%q: %t\n", fi.Path, ourbase.HasBlob(fi.Hash))
 				}
 				if ourbase.HasBlob(fi.Hash) && !ourbase.SameFile(fi.Hash, fi.Path) {
 					if err := ourbase.LinkTo(fi.Path, fi.Hash); err != nil {
