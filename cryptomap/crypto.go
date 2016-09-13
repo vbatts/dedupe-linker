@@ -12,31 +12,27 @@ import (
 	_ "crypto/sha512"
 )
 
-var knownCiphers = map[string]crypto.Hash{
-	"md5": crypto.MD5,
+// DefaultCipher is the crypto cipher default used if none is specified or
+// specified is unknown.
+var DefaultCipher = "sha1"
+
+// Ciphers is the known set of mappings for string to crypto.Hash
+// use an init() to add custom hash ciphers
+var Ciphers = map[string]crypto.Hash{
+	"md5":    crypto.MD5,
+	"sha1":   crypto.SHA1,
+	"sha224": crypto.SHA224,
+	"sha256": crypto.SHA256,
+	"sha384": crypto.SHA384,
+	"sha512": crypto.SHA512,
 }
 
 // DetermineHash takes a generic string, like "sha1" and returns the
 // corresponding crypto.Hash
 func DetermineHash(str string) (h crypto.Hash) {
-	// TODO make these strings discoverable, like a public variable
-	switch strings.ToLower(str) {
-	case "md5":
-		h = crypto.MD5
-	case "sha1":
-		h = crypto.SHA1
-	case "sha224":
-		h = crypto.SHA224
-	case "sha256":
-		h = crypto.SHA256
-	case "sha384":
-		h = crypto.SHA384
-	case "sha512":
-		h = crypto.SHA512
-	default:
-		log.Printf("WARNING: unknown cipher %q. using 'sha1'", str)
-		h = crypto.SHA1
+	if h, ok := Ciphers[strings.ToLower(str)]; ok {
+		return h
 	}
-
-	return h
+	log.Printf("WARNING: unknown cipher %q. using %q", str, DefaultCipher)
+	return Ciphers[DefaultCipher]
 }

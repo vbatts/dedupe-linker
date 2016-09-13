@@ -17,7 +17,7 @@ var (
 	varBaseDir = filepath.Join(os.Getenv("HOME"), ".dedupe-linker/")
 
 	flVarBase = flag.String("b", varBaseDir, "base directory where files are duplicated")
-	flCipher  = flag.String("c", "sha1", "block cipher to use (sha1, or sha256)")
+	flCipher  = flag.String("c", cryptomap.DefaultCipher, "block cipher to use (sha1, or sha256)")
 	flWorkers = flag.Int("w", 2, "workers to do summing")
 	flNoop    = flag.Bool("noop", false, "don't do any moving or linking")
 	flDebug   = flag.Bool("debug", false, "enable debug output")
