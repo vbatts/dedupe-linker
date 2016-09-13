@@ -53,8 +53,8 @@ func main() {
 
 	var (
 		hash = cryptomap.DetermineHash(*flCipher)
-		//infos = []*file.FileHashInfo{}
-		//results := make(chan file.FileHashInfo, 2)
+		//infos = []*file.HashInfo{}
+		//results := make(chan file.HashInfo, 2)
 	)
 
 	for _, arg := range flag.Args() {
