@@ -83,6 +83,27 @@ func GetDev(path string) (uint64, error) {
 	return stat.Dev, nil
 }
 
+// SameFile checks whether the two paths are same device and inode
+func SameFile(fpath1, fpath2 string) bool {
+	bStat, err := GetStat(fpath1)
+	if err != nil {
+		return false
+	}
+	dStat, err := GetStat(fpath2)
+	if err != nil {
+		return false
+	}
+	if bStat.Dev != dStat.Dev {
+		return false
+	}
+	if bStat.Ino != dStat.Ino {
+		return false
+	}
+	// if we made it here, we must be ok
+	return true
+
+}
+
 // GetNlink returns the number of links for path. For directories, that is
 // number of entries. For regular files, that is number of hardlinks.
 func GetNlink(path string) (uint64, error) {

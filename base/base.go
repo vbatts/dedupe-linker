@@ -53,21 +53,7 @@ type ReadSeekCloser interface {
 // SameFile checks whether the object of `sum` address, and `path` file path are the same file.
 // This checks by inode and device.
 func (b Base) SameFile(sum, path string) bool {
-	var (
-		bInode, dInode uint64
-		err            error
-	)
-	if bInode, err = file.GetInode(b.blobPath(sum)); err != nil {
-		return false
-	}
-	if dInode, err = file.GetInode(path); err != nil {
-		return false
-	}
-	if bInode == dInode {
-		return true
-	}
-	return false
-
+	return file.SameFile(b.blobPath(sum), path)
 }
 
 // GetBlob store the content from src, for the sum and hashType
