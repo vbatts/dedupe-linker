@@ -32,6 +32,12 @@ func init() {
 	if os.Getenv("VARBASEDIR") != "" {
 		varBaseDir = filepath.Clean(os.Getenv("VARBASEDIR"))
 	}
+
+	flag.Usage = func() {
+		fmt.Fprintf(flag.CommandLine.Output(), "Usage of %s:\n", os.Args[0])
+		fmt.Fprintf(flag.CommandLine.Output(), "\nThis app will make hardlinks of a directory tree, to a content addressible collection in the 'basedir'\n\n")
+		flag.PrintDefaults()
+	}
 }
 
 func main() {
