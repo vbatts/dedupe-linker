@@ -32,10 +32,10 @@ func HashFileGetter(path string, hash crypto.Hash, ignoreSuffixes []string, work
 				return err
 			}
 			for _, suff := range ignoreSuffixes {
-				if os.Getenv("DEBUG") != "" {
-					fmt.Printf("[DEBUG] path: %q ; suff: %q\n", filepath.Clean(path), filepath.Clean(suff))
-				}
 				if strings.HasSuffix(filepath.Clean(path), filepath.Clean(suff)) {
+					if os.Getenv("DEBUG") != "" {
+						fmt.Printf("[DEBUG] skipping dir %q; has suff: %q\n", filepath.Clean(path), filepath.Clean(suff))
+					}
 					return filepath.SkipDir
 				}
 			}
