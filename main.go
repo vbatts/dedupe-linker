@@ -58,10 +58,30 @@ func main() {
 	}
 
 	var (
-		hash = cryptomap.DetermineHash(*flCipher)
+		ignoreSuffixes = []string{}
+		hash           = cryptomap.DetermineHash(*flCipher)
 		//infos = []*file.HashInfo{}
 		//results := make(chan file.HashInfo, 2)
 	)
+
+	bpath, err := filepath.Abs(*flVarBase)
+	if err != nil {
+		log.Fatal(err)
+	}
+	for _, arg := range flag.Args() {
+		apath, err := filepath.Abs(arg)
+		if err != nil {
+			log.Fatal(err)
+		}
+		rel, err := filepath.Rel(apath, bpath)
+		if err != nil {
+			log.Fatal(err)
+		}
+		ignoreSuffixes = append(ignoreSuffixes, rel)
+	}
+	if os.Getenv("DEBUG") != "" {
+		fmt.Printf("[DEBUG] ignoreSuffixes: %#v\n", ignoreSuffixes)
+	}
 
 	for _, arg := range flag.Args() {
 		if !*flNoop {
@@ -73,7 +93,7 @@ func main() {
 			}
 		}
 		done := make(chan struct{})
-		infos := file.HashFileGetter(arg, hash, *flWorkers, done)
+		infos := file.HashFileGetter(arg, hash, ignoreSuffixes, *flWorkers, done)
 		for fi := range infos {
 			if fi.Err != nil {
 				log.Println(fi.Err)

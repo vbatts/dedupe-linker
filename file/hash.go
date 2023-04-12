@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 )
 
@@ -23,12 +24,20 @@ type HashInfo struct {
 
 // HashFileGetter walks the provided `path` with `workers` number of threads.
 // The channel of HashInfo are for each regular file encountered.
-func HashFileGetter(path string, hash crypto.Hash, workers int, done <-chan struct{}) <-chan HashInfo {
+func HashFileGetter(path string, hash crypto.Hash, ignoreSuffixes []string, workers int, done <-chan struct{}) <-chan HashInfo {
 	out := make(chan HashInfo, workers)
 	go func() {
 		err := filepath.Walk(path, func(path string, info os.FileInfo, err error) error {
 			if err != nil {
 				return err
+			}
+			for _, suff := range ignoreSuffixes {
+				if os.Getenv("DEBUG") != "" {
+					fmt.Printf("[DEBUG] path: %q ; suff: %q\n", filepath.Clean(path), filepath.Clean(suff))
+				}
+				if strings.HasSuffix(filepath.Clean(path), filepath.Clean(suff)) {
+					return filepath.SkipDir
+				}
 			}
 			if !info.Mode().IsRegular() {
 				return nil
